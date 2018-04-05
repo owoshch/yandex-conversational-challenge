@@ -1,0 +1,9 @@
+logging
+scikit-learn
+tqdm
+pymorphy2
+requests
+numpy
+pandas
+ast
+itertools
