@@ -91,9 +91,12 @@ class Config():
     test_indices = "../data/test_context_ids.npy"
     val_indices = "../data/val_context_ids.npy"
 
-    path_to_train = "../data/train_splitted.csv"
-    path_to_test = "../data/test_splitted.csv"
-    path_to_val = "../data/val_splitted.csv"
+    path_to_train = "./datasets/train_splitted.csv"
+    path_to_test = "./datasets/test_splitted.csv"
+    path_to_val = "./datasets/val_splitted.csv"
+
+
+
 
     path_to_preprocessed_train = "../data/train_preprocessed.csv"
     path_to_preprocessed_test = "../data/test_preprocessed.csv"
@@ -110,7 +113,7 @@ class Config():
 
     # training
     train_embeddings = False
-    nepochs          = 30
+    nepochs          = 100
     dropout          = 0.5
     batch_size       = 20
     lr_method        = "adam"
