@@ -15,7 +15,9 @@ class BaseModel(object):
         """
         self.config = config
         self.logger = config.logger
-        self.sess   = None
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
+        self.sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+        #self.sess   = None
         self.saver  = None
 
 
