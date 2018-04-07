@@ -54,7 +54,7 @@ class Config():
                 if self.use_pretrained else None)
         
         
-    dir_output = "results/large_lstm_test/"
+    dir_output = "results/baseline_dnn_test/"
     dir_model  = dir_output + "model.weights/"
     path_log   = dir_output + "log.txt"
         
