@@ -131,28 +131,69 @@ class NERModel(BaseModel):
             (output_fw, output_bw), _ = tf.nn.bidirectional_dynamic_rnn(
                     cell_fw, cell_bw, self.word_embeddings,
                     sequence_length=self.sequence_lengths, dtype=tf.float32)
-            output = tf.concat([output_fw, output_bw], axis=-1)
+            output = tf.concat([self.word_embeddings, output_fw, output_bw], axis=-1)
             output = tf.nn.dropout(output, self.dropout)
             
-        
         with tf.variable_scope("proj"):
             W = tf.get_variable("W", dtype=tf.float32,
-                    shape=[2*self.config.hidden_size_lstm, self.config.ntags])
+                    shape=[2*self.config.hidden_size_lstm + self.config.dim_word, 150])
 
-            b = tf.get_variable("b", shape=[self.config.ntags],
+            b = tf.get_variable("b", shape=[150],
                     dtype=tf.float32, initializer=tf.zeros_initializer())
 
             nsteps = tf.shape(output)[1]
-            output = tf.reshape(output, [-1, 2*self.config.hidden_size_lstm])
+            output = tf.reshape(output, [-1, 2*self.config.hidden_size_lstm + self.config.dim_word])
             pred = tf.matmul(output, W) + b
+            
+            
+            pred = tf.nn.relu(pred)
+            
+            W1 = tf.get_variable('W1', dtype=tf.float32,
+                                 shape=[150, 50],
+                                initializer=tf.contrib.layers.xavier_initializer())
+            b1 = tf.get_variable('b1', dtype=tf.float32,
+                                shape=[50], initializer=tf.zeros_initializer())
+            
+            pred = tf.matmul(pred, W1) + b1
+            pred = tf.nn.relu(pred)
+            
+            
+            W2 = tf.get_variable('W2', dtype=tf.float32,
+                                 shape=[50, self.config.ntags],
+                                initializer=tf.contrib.layers.xavier_initializer())
+            b2 = tf.get_variable('b2', dtype=tf.float32,
+                                shape=[self.config.ntags], initializer=tf.zeros_initializer())
+            pred = tf.matmul(pred, W2) + b2
+            pred = tf.nn.sigmoid(pred)
+            
+
+            
             logits = tf.reshape(pred, [-1, nsteps, self.config.ntags])
             
-            #print ('logits shape', logits)
-            
-            self.logits = tf.reduce_sum(logits, axis=1)
             
             
-    
+            #self.logits = tf.reduce_mean(logits, axis=1)
+            
+            logits = logits[:, -4:]
+            
+            W3 = tf.get_variable('W3', dtype=tf.float32,
+                                shape=[self.config.batch_size, 1, 4],
+                                initializer=tf.contrib.layers.xavier_initializer())
+            
+            b3 = tf.get_variable('b3', dtype=tf.float32,
+                                shape=[self.config.ntags],
+                                initializer=tf.zeros_initializer())
+            
+            logits = tf.matmul(W3, logits) 
+            
+            logits = tf.reshape(logits, shape=[self.config.batch_size, self.config.ntags])
+            
+            self.logits = logits + b2
+            
+            
+            #print ('logits shape', logits.shape)
+            
+            #self.logits = tf.reduce_mean(logits, axis=1)
     
     def add_pred_op(self):
         """Defines self.labels_pred
@@ -299,18 +340,29 @@ class NERModel(BaseModel):
             predicted_labels.extend(labels_pred)
             pbar.update(self.config.batch_size)
         pbar.close()    
-            
+        
+        print ('saving predicted labels')
+        np.save(self.config.path_to_predicted_labels, predicted_labels)
+        print ('predicted labels are saved')
+        
+        
         acc = accuracy_score(correct_labels, predicted_labels)
         f1 = f1_score(correct_labels, predicted_labels, average='macro')
             
         
+        
+        
         if path_to_test is None:
-            path_to_test = self.config.path_to_test
+            path_to_test = self.config.path_to_val
+        
         
         test_dataframe = pd.read_csv(path_to_test)
+        
+        
+        
         test_dataframe['predicted'] = predicted_labels
         
-        NDCG = get_mean_NDCG(test_dataframe)
+        NDCG = get_mean_NDCG(test_dataframe, predicted_labels)
         
         return {"acc": 100*acc, "f1": 100*f1, "NDCG": NDCG}
     
@@ -331,4 +383,49 @@ class NERModel(BaseModel):
         preds = [self.idx_to_tag[idx] for idx in list(pred_ids[0])]
 
         return preds
+    
+    def create_submission(self, path_to_test=None, 
+               path_to_submission=None):
+
+        if path_to_test is None:
+            path_to_test = self.config.path_to_preprocessed_test
+        if path_to_submission is None:
+            path_to_submission = self.config.path_to_submission
+        
+        data = pd.read_csv(path_to_test)
+        
+        sentences = [literal_eval(sentence) for sentence in data['contexts_and_reply']]
+        tags = [[0, 0, 0]] * len(sentences)
+        
+        test = list(zip(sentences, tags))
+
+        pbar = tqdm.tqdm(total=len(test))
+        predicted_labels = []
+        for words, labels in minibatches(test, self.config.batch_size):
+            labels_pred, sequence_lengths = self.predict_batch(words)
+            predicted_labels.extend(labels_pred)
+            pbar.update(self.config.batch_size)
+        pbar.close()    
+        
+        
+        
+        
+        data['predicted'] = predicted_labels
+
+
+
+        context_ids, reply_ids = [], []
+        for line in data.context_id.unique():
+            df = data.loc[data['context_id'] == line]
+            ids_and_labels = list(zip(df.context_id, df.reply_id, df.predicted))
+            ids_and_labels = sorted(ids_and_labels, key=lambda x: -x[-1])
+            context_ids.extend([x[0] for x in ids_and_labels])
+            reply_ids.extend([x[1] for x in ids_and_labels])
+        with open(path_to_submission, 'w') as fp:
+            fp.write('\n'.join('%s %s' % x for x in zip(context_ids, reply_ids)))
+
+        print ('Submission is saved')
+
+                
+        return data
 

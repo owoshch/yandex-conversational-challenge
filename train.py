@@ -16,10 +16,10 @@ config = Config()
 model = NERModel(config)
 model.build()
 
-test = load_dataset(model.config.path_to_test)
+#test = load_dataset(model.config.path_to_test)
 val = load_dataset(model.config.path_to_val)
+train = load_dataset(model.config.path_to_train)
 
-
-model.train(val, test)
+model.train(train, val)
 
 

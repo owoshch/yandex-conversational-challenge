@@ -97,6 +97,10 @@ class Config():
 
     path_to_preprocessed_train = "../data/train_preprocessed.csv"
     path_to_preprocessed_test = "../data/test_preprocessed.csv"
+    path_to_submission = "../data/submission.csv"
+    path_to_predicted_labels = "../data/predicted_labels.npy"
+
+
 
     mapping = {"good": [0, 0, 1], "neutral": [0, 1, 0], "bad": [1, 0, 0]}
     label_to_num = {"good": 2, "neutral": 1, "bad": 0}

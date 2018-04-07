@@ -40,8 +40,6 @@ def load_dataset(path_to_data):
 
 
 
-
-
 def get_processing_word(vocab_words=None, vocab_chars=None,
                     lowercase=False, chars=False, allow_unk=True, unk_dict=None):
     """Return lambda function that transform a word (string) into list,
