@@ -119,9 +119,8 @@ class NERModel(BaseModel):
     
     
     
-    def add_logits_op(self):
+        def add_logits_op(self):
         """Defines self.logits
-
         For each word in each sentence of the batch, it corresponds to a vector
         of scores, of dimension equal to the number of tags.
         """
@@ -131,69 +130,25 @@ class NERModel(BaseModel):
             (output_fw, output_bw), _ = tf.nn.bidirectional_dynamic_rnn(
                     cell_fw, cell_bw, self.word_embeddings,
                     sequence_length=self.sequence_lengths, dtype=tf.float32)
-            output = tf.concat([self.word_embeddings, output_fw, output_bw], axis=-1)
+            output = tf.concat([output_fw, output_bw], axis=-1)
             output = tf.nn.dropout(output, self.dropout)
             
+        
         with tf.variable_scope("proj"):
             W = tf.get_variable("W", dtype=tf.float32,
-                    shape=[2*self.config.hidden_size_lstm + self.config.dim_word, 150])
+                    shape=[2*self.config.hidden_size_lstm, self.config.ntags])
 
-            b = tf.get_variable("b", shape=[150],
+            b = tf.get_variable("b", shape=[self.config.ntags],
                     dtype=tf.float32, initializer=tf.zeros_initializer())
 
             nsteps = tf.shape(output)[1]
-            output = tf.reshape(output, [-1, 2*self.config.hidden_size_lstm + self.config.dim_word])
+            output = tf.reshape(output, [-1, 2*self.config.hidden_size_lstm])
             pred = tf.matmul(output, W) + b
-            
-            
-            pred = tf.nn.relu(pred)
-            
-            W1 = tf.get_variable('W1', dtype=tf.float32,
-                                 shape=[150, 50],
-                                initializer=tf.contrib.layers.xavier_initializer())
-            b1 = tf.get_variable('b1', dtype=tf.float32,
-                                shape=[50], initializer=tf.zeros_initializer())
-            
-            pred = tf.matmul(pred, W1) + b1
-            pred = tf.nn.relu(pred)
-            
-            
-            W2 = tf.get_variable('W2', dtype=tf.float32,
-                                 shape=[50, self.config.ntags],
-                                initializer=tf.contrib.layers.xavier_initializer())
-            b2 = tf.get_variable('b2', dtype=tf.float32,
-                                shape=[self.config.ntags], initializer=tf.zeros_initializer())
-            pred = tf.matmul(pred, W2) + b2
-            pred = tf.nn.sigmoid(pred)
-            
-
-            
             logits = tf.reshape(pred, [-1, nsteps, self.config.ntags])
             
             
+            self.logits = logits[:, -1:]
             
-            #self.logits = tf.reduce_mean(logits, axis=1)
-            
-            logits = logits[:, -4:]
-            
-            W3 = tf.get_variable('W3', dtype=tf.float32,
-                                shape=[self.config.batch_size, 1, 4],
-                                initializer=tf.contrib.layers.xavier_initializer())
-            
-            b3 = tf.get_variable('b3', dtype=tf.float32,
-                                shape=[self.config.ntags],
-                                initializer=tf.zeros_initializer())
-            
-            logits = tf.matmul(W3, logits) 
-            
-            logits = tf.reshape(logits, shape=[self.config.batch_size, self.config.ntags])
-            
-            self.logits = logits + b2
-            
-            
-            #print ('logits shape', logits.shape)
-            
-            #self.logits = tf.reduce_mean(logits, axis=1)
     
     def add_pred_op(self):
         """Defines self.labels_pred

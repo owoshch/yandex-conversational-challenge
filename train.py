@@ -23,3 +23,8 @@ train = load_dataset(model.config.path_to_train)
 model.train(train, val)
 
 
+# Print evaluating on test set
+
+model.restore_session(config.dir_model)
+model.create_submission()
+
