@@ -119,7 +119,7 @@ class NERModel(BaseModel):
     
     
     
-        def add_logits_op(self):
+    def add_logits_op(self):
         """Defines self.logits
         For each word in each sentence of the batch, it corresponds to a vector
         of scores, of dimension equal to the number of tags.

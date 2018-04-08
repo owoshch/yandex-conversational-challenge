@@ -20,6 +20,7 @@ model.build()
 val = load_dataset(model.config.path_to_val)
 train = load_dataset(model.config.path_to_train)
 
+
 model.train(train, val)
 
 

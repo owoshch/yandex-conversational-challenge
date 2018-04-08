@@ -54,7 +54,7 @@ class Config():
                 if self.use_pretrained else None)
         
         
-    dir_output = "results/baseline_dnn_test/"
+    dir_output = "results/no_glove_last_word/"
     dir_model  = dir_output + "model.weights/"
     path_log   = dir_output + "log.txt"
         
@@ -100,7 +100,7 @@ class Config():
 
     path_to_preprocessed_train = "../data/train_preprocessed.csv"
     path_to_preprocessed_test = "../data/test_preprocessed.csv"
-    path_to_submission = "../data/submission.csv"
+    path_to_submission = "../data/submission.txt"
     path_to_predicted_labels = "../data/predicted_labels.npy"
 
 
