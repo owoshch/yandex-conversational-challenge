@@ -60,8 +60,8 @@ class Config():
     dir_model  = dir_output + "model.weights/"
     path_log   = dir_output + "log.txt"
         
-    filename_words = "../data/vocab.txt"
-
+    #filename_words = "../data/vocab.txt"
+    filename_words = "./vocab.txt"
 
     path_to_embedding_vectors = "../data/wiki.ru.vec" #fasttext embedding
     filename_glove = "../data/wiki.ru.vec"
