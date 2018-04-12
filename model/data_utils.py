@@ -6,6 +6,10 @@ import tqdm
 import os
 from ast import literal_eval
 import itertools
+from fastText import load_model
+import argparse
+import errno
+from scipy.spatial.distance import euclidean
 
 # shared global variables to be imported from model also
 UNK = "$UNK$"
@@ -195,6 +199,15 @@ def export_trimmed_glove_vectors(vocab, glove_filename, trimmed_filename, dim):
     np.savez_compressed(trimmed_filename, embeddings=embeddings)
 
 
+
+def export_trimmed_fasttext_vectors(vocab, fasttext_bin_filename, trimmed_filename):
+    embeddings = np.zeros([len(vocab), dim])
+    f = load_model(fasttext_bin_filename)
+    for word in tqdm.tqdm(vocab):
+        embeddings[vocab[word]] = f.get_sentence_word(word)
+    np.savez_compressed(trimmed_filename, embeddings=embeddings)
+
+
 def get_trimmed_glove_vectors(filename):
     """
     Args:
@@ -376,12 +389,79 @@ def ndcg_at_k(r, correct_rankings, k=None, method=0):
     return dcg_at_k(r, k, method) / dcg_max
 
 
+
 def get_predictions(weighted_labels):
     weighted_labels = np.array(weighted_labels)
     max_elements = weighted_labels.max(axis=1)[:, np.newaxis]
     one_hot_labels = (weighted_labels == max_elements).astype(int)
     labels = one_hot_labels * max_elements
     return one_hot_labels, labels
+
+
+def softmax(x):
+    """Compute the softmax function for each row of the input x.
+
+    It is crucial that this function is optimized for speed because
+    it will be used frequently in later code. You might find numpy
+    functions np.exp, np.sum, np.reshape, np.max, and numpy
+    broadcasting useful for this task.
+
+    Numpy broadcasting documentation:
+    http://docs.scipy.org/doc/numpy/user/basics.broadcasting.html
+
+    You should also make sure that your code works for a single
+    D-dimensional vector (treat the vector as a single row) and
+    for N x D matrices. This may be useful for testing later. Also,
+    make sure that the dimensions of the output match the input.
+
+    You must implement the optimization in problem 1(a) of the
+    written assignment!
+
+    Arguments:
+    x -- A D dimensional vector or N x D dimensional numpy matrix.
+
+    Return:
+    x -- You are allowed to modify x in-place
+    """
+    orig_shape = x.shape
+
+    if len(x.shape) > 1:
+        # Matrix
+        ### YOUR CODE HERE
+        #raise NotImplementedError
+        max_elements = np.max(x, axis=1)
+        max_elements = max_elements[:, np.newaxis]
+        e_x = np.exp(x - max_elements)
+        rows_sums = np.sum(e_x, axis=1)
+        rows_sums = rows_sums[:, np.newaxis]
+        x = e_x / rows_sums
+        ### END YOUR CODE
+    else:
+        # Vector
+        ### YOUR CODE HERE
+        e_x = np.exp(x - np.max(x))
+        x = e_x / np.sum(e_x)
+        ### END YOUR CODE
+
+    assert x.shape == orig_shape
+    return x
+
+
+
+def sort_predictions(dataframe, predictitons):
+    total_predictions = []
+    for _id in list(dataframe.context_id.unique()):
+        partition = dataframe.loc[dataframe['context_id'] == _id]
+        #print (partition.index)
+        #print (np.take(l, partition.index, axis=0))
+        partial_preds = np.take(predictitons, partition.index, axis=0)
+        p = list(enumerate(partial_preds))
+        p = sorted(p, key=lambda x: -x[-1][-1])
+        predicted_indices = [x[0] for x in p]
+        predicted_probas = [x[1] for x in p]
+        total_predictions.extend(predicted_indices)
+    return total_predictions
+
 
 
 
@@ -391,11 +471,16 @@ def get_scores_and_ids(dataframe, context_id):
     partition = dataframe.loc[dataframe['context_id'] == context_id]
     try: 
         weighted_labels = [literal_eval(l) for l in partition.weighted_label]
-        predicted_labels = [literal_eval(l) for l in partition.predicted]
+        #predicted_labels = [literal_eval(l) for l in partition.predicted]
     except ValueError:
         weighted_labels = partition.weighted_label
-        predicted_labels = partition.predicted
+        #predicted_labels = partition.predicted
     
+    try:
+        predicted_labels = [literal_eval(l) for l in partition.predicted]
+    except ValueError:
+        predicted_labels = partition.predicted
+
     correct_labels = partition.label.apply(lambda x: label_to_num[x])
     id_to_label = dict(zip(partition.reply_id, correct_labels))
     
@@ -420,6 +505,8 @@ def get_mean_NDCG(dataframe, predictions = None):
     if predictions is None:
         predictions = dataframe.predicted
         print ('setting predictions to predicted column in test')
+    else:
+        dataframe['predicted'] = predictions
     
     scores = np.array([])
     
@@ -527,3 +614,84 @@ def one_hot_to_num(value):
         return 1
     elif value == [0, 0, 1]:
         return 2
+
+
+def get_embedding(indices, vocab):
+    # indices must be a list of int indices
+    try:
+        indices = literal_eval(indices)
+    except ValueError:
+        indices = indices
+    
+    embedded_sentence = np.take(vocab, indices, axis=0)
+    return embedded_sentence
+
+
+def get_distances(dataframe, vocab, f=euclidean):
+    total_distances = []
+    for _id in list(dataframe.context_id.unique()):
+        partition = dataframe.loc[dataframe['context_id'] == _id]
+        distances = []
+        context = literal_eval(partition.merged_contexts.iloc[0])
+        context_vector = get_embedding(context, vocab)
+        mean_context = np.mean(context_vector, axis=0)
+        replies = [literal_eval(x) for x in partition.reply]
+        for reply, reply_id in zip(replies, partition.reply_id):
+            reply_vector = get_embedding(reply, vocab)
+            mean_reply = np.mean(reply_vector, axis=0)
+            #distance = (mean_context - mean_reply) ** 2
+            distance = f(mean_context, mean_reply)
+            #distances = np.append(distances, distance)
+            distances.append(distance)
+        total_distances.extend(distances)
+    return total_distances 
+
+def get_pointwise_distances(dataframe, vocab, f=euclidean):
+    total_distances = []
+    for _id in list(dataframe.context_id.unique()):
+        partition = dataframe.loc[dataframe['context_id'] == _id]
+        distances = []
+        context = literal_eval(partition.merged_contexts.iloc[0])
+        context_vector = get_embedding(context, vocab)
+        mean_context = np.mean(context_vector, axis=0)
+        replies = [literal_eval(x) for x in partition.reply]
+        for reply, reply_id in zip(replies, partition.reply_id):
+            reply_vector = get_embedding(reply, vocab)
+            mean_reply = np.mean(reply_vector, axis=0)
+            distance = (mean_context - mean_reply) ** 2
+            #distance = f(mean_context, mean_reply)
+            #distances = np.append(distances, distance)
+            distances.append(distance)
+        total_distances.extend(distances)
+    return total_distances
+
+def compute_lengths(dataframe):
+    lens = []
+    for _id in list(dataframe.context_id.unique()):
+        partition = dataframe.loc[dataframe['context_id'] == _id]
+        lens.append(len(partition))
+    return lens
+
+def sort_xgb_predictions(dataframe, predictitons):
+    total_predictions = []
+    for _id in list(dataframe.context_id.unique()):
+        partition = dataframe.loc[dataframe['context_id'] == _id]
+        #print (partition.index)
+        #print (np.take(l, partition.index, axis=0))
+        partial_preds = np.take(predictitons, partition.index, axis=0)
+        p = list(enumerate(partial_preds))
+        #print (p)
+        p = sorted(p, key=lambda x: -x[-1])
+        predicted_indices = [x[0] for x in p]
+        #print (predicted_indices)
+        predicted_probas = [x[1] for x in p]
+        #print (predicted_probas)
+        total_predictions.extend(predicted_indices)
+    return total_predictions
+
+
+def save_submission(path_to_submission, dataframe, predictions):
+    with open(path_to_sub,"w+") as f:
+        for k, v in (zip(dataframe.context_id.values, predictions)):
+            f.write("%s %s" % (k, v))
+            f.write("\n")
