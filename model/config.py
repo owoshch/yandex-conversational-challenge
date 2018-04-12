@@ -5,6 +5,8 @@ from .general_utils import get_logger
 from .data_utils import get_trimmed_glove_vectors,  load_vocab, \
         get_processing_word
 
+
+
 class Config():
     def __init__(self, load=True):
         """Initialize hyperparameters and load vocabs
@@ -63,7 +65,9 @@ class Config():
 
     path_to_embedding_vectors = "../data/wiki.ru.vec" #fasttext embedding
     filename_glove = "../data/wiki.ru.vec"
-    filename_trimmed = "../data/embedding_vectors.npy.npz"
+    filename_bin_fasttext = "../data/wiki.ru.bin"
+    #filename_trimmed = "../data/embedding_vectors.npy.npz"
+    filename_trimmed = "../data/fasttext_embedding_vectors.npy.npz"
 
     # train and test imports
 
@@ -103,6 +107,8 @@ class Config():
     path_to_submission = "../data/submission.txt"
     path_to_predicted_labels = "../data/predicted_labels.npy"
 
+    path_to_xgb_models = "../data/xgb_models/"
+    path_to_xgb_log = "../data/xgb_models/xgb_log.txt"
 
 
     mapping = {"good": [0, 0, 1], "neutral": [0, 1, 0], "bad": [1, 0, 0]}
@@ -113,7 +119,7 @@ class Config():
 
     # training
     train_embeddings = False
-    nepochs          = 100
+    nepochs          = 1
     dropout          = 0.5
     batch_size       = 20
     lr_method        = "adam"
