@@ -109,6 +109,7 @@ class Config():
 
     path_to_xgb_models = "../data/xgb_models/"
     path_to_xgb_log = "../data/xgb_models/xgb_log.txt"
+    path_to_xgb_submissions="../data/xgb_sumbissions/"
 
 
     mapping = {"good": [0, 0, 1], "neutral": [0, 1, 0], "bad": [1, 0, 0]}
