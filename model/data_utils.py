@@ -691,7 +691,7 @@ def sort_xgb_predictions(dataframe, predictitons):
 
 
 def save_submission(path_to_submission, dataframe, predictions):
-    with open(path_to_sub,"w+") as f:
+    with open(path_to_submission,"w+") as f:
         for k, v in (zip(dataframe.context_id.values, predictions)):
             f.write("%s %s" % (k, v))
             f.write("\n")
