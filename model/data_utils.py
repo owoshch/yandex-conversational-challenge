@@ -52,6 +52,16 @@ def load_regression_dataset(path_to_data, conf=0.999):
     return list(zip(sentences, tags))
 
 
+def load_test_set(path_to_data, conf=0.999):
+    label_to_num = {"good": 2, "neutral": 1, "bad": 1 - conf}
+    data = pd.read_csv(path_to_data)
+    sentences = [literal_eval(sentence) for sentence in data['contexts_and_reply']]
+    tags = np.zeros(len(sentences))
+    #y_labels= np.array([label_to_num[x] for x in data.label])
+    #tags = y_labels * data.confidence
+    return list(zip(sentences, tags))
+
+
 def get_processing_word(vocab_words=None, vocab_chars=None,
                     lowercase=False, chars=False, allow_unk=True, unk_dict=None):
     """Return lambda function that transform a word (string) into list,
