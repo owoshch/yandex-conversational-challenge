@@ -43,6 +43,14 @@ def load_dataset(path_to_data):
     return list(zip(sentences, tags))
 
 
+def load_regression_dataset(path_to_data, conf=0.999):
+    label_to_num = {"good": 2, "neutral": 1, "bad": 1 - conf}
+    data = pd.read_csv(path_to_data)
+    sentences = [literal_eval(sentence) for sentence in data['contexts_and_reply']]
+    y_labels= np.array([label_to_num[x] for x in data.label])
+    tags = y_labels * data.confidence
+    return list(zip(sentences, tags))
+
 
 def get_processing_word(vocab_words=None, vocab_chars=None,
                     lowercase=False, chars=False, allow_unk=True, unk_dict=None):
@@ -506,6 +514,8 @@ def get_mean_NDCG(dataframe, predictions = None):
         predictions = dataframe.predicted
         print ('setting predictions to predicted column in test')
     else:
+        print ('type preds', type(predictions[0]))
+        predictions = np.array(predictions)
         dataframe['predicted'] = predictions
     
     scores = np.array([])
@@ -674,6 +684,7 @@ def compute_lengths(dataframe):
 
 def sort_xgb_predictions(dataframe, predictitons):
     total_predictions = []
+    print ('type', type(predictitons[0]))
     for _id in list(dataframe.context_id.unique()):
         partition = dataframe.loc[dataframe['context_id'] == _id]
         #print (partition.index)
@@ -695,3 +706,15 @@ def save_submission(path_to_submission, dataframe, predictions):
         for k, v in (zip(dataframe.context_id.values, predictions)):
             f.write("%s %s" % (k, v))
             f.write("\n")
+
+
+def indices_to_sentence(sentence, id2word):
+    sentence = [id2word[x] for x in literal_eval(sentence)]
+    return " ".join(sentence)
+
+
+def ids_to_sentences(dataframe, config, columns = ['context_2', 'context_1', 'context_0', 
+                                           'reply', 'merged_contexts', 'contexts_and_reply']):
+    id2word = {value:key for key,value in config.vocab_words.items()}
+    for column_name in tqdm.tqdm(columns):
+        dataframe[column_name] = dataframe[column_name].apply(lambda line: indices_to_sentence(line, id2word))
