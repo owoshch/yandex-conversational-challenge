@@ -370,8 +370,8 @@ class NERModel(BaseModel):
         pbar = tqdm.tqdm(total=len(test))
         
         predicted_labels = []
-        for words, replies, labels in minibatches_w_replies(test, self.config.batch_size):
-            labels_pred, sequence_lengths = self.predict_batch(words, replies)
+        for words, labels in minibatches(test, self.config.batch_size):
+            labels_pred, sequence_lengths = self.predict_batch(words)
             predicted_labels.extend(labels_pred)
             pbar.update(self.config.batch_size)
         pbar.close()  
@@ -395,7 +395,6 @@ class NERModel(BaseModel):
         NDCG = np.mean((test_NDCG, val_NDCG))
         
         return {"NDCG": NDCG}
-    
 
         
     
