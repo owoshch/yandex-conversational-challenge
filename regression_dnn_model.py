@@ -386,7 +386,7 @@ class NERModel(BaseModel):
         print ('test NDCG', test_NDCG)
         
         val_df = pd.read_csv(self.config.path_to_val)
-        val = load_pairwise_dataset(self.config.path_to_val)
+        val = load_regression_datase(self.config.path_to_val)
         val_preds = self.predict_proba(val)
         val_NDCG = get_mean_NDCG(val_df, sort_xgb_predictions(val_df, val_preds))
                                  
