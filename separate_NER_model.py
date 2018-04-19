@@ -8,7 +8,18 @@ import os
 import tensorflow as tf
 from ast import literal_eval
 import tqdm
+'''
+from model.general_utils import Progbar
+from model.base_model import BaseModel
+from model.separate_config import Config
+from model.data_utils import minibatches, minibatches_w_replies, pad_sequences, \
+        load_dataset, load_regression_dataset, one_hot_to_num, \
+        get_mean_NDCG, softmax, sort_xgb_predictions, save_submission
+from sklearn.metrics import accuracy_score, f1_score
+from collections import Counter
+import tqdm
 
+'''
 from model.general_utils import Progbar
 from model.base_model import BaseModel
 from model.separate_config import Config
@@ -434,10 +445,20 @@ class NERModel(BaseModel):
         
         sorted_preds = sort_xgb_predictions(test_dataframe, predicted_labels) 
         
-        print ('sorted preds', sorted_preds[:20])
-        print ('type:', type(sorted_preds[0]))
+    
+        test_NDCG = get_mean_NDCG(test_dataframe, sorted_preds)
         
-        NDCG = get_mean_NDCG(test_dataframe, sorted_preds)
+        print ('test NDCG', test_NDCG)
+        
+        val_df = pd.read_csv(self.config.path_to_val)
+        val = load_pairwise_dataset(self.config.path_to_val)
+        val_preds = self.predict_proba(val)
+        val_NDCG = get_mean_NDCG(val_df, sort_xgb_predictions(val_df, val_preds))
+                                 
+        print ('val NDCG', val_NDCG)
+                                 
+        NDCG = np.mean((test_NDCG, val_NDCG))
+        
         return {"NDCG": NDCG}
     
 
