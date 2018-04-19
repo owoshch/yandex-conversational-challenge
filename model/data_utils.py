@@ -43,6 +43,26 @@ def load_dataset(path_to_data):
     return list(zip(sentences, tags))
 
 
+def load_pairwise_dataset(path_to_data, conf=0.999):
+    label_to_num = {"good": 2, "neutral": 1, "bad": 1 - conf}
+    data = pd.read_csv(path_to_data)
+    sentences = [literal_eval(sentence) for sentence in data['merged_contexts']]
+    replies = [literal_eval(sentence) for sentence in data['reply']]
+    y_labels= np.array([label_to_num[x] for x in data.label])
+    tags = y_labels * data.confidence
+    return list(zip(sentences, replies, tags))
+
+
+def load_pairwise_testset(path_to_data, conf=0.999):
+    label_to_num = {"good": 2, "neutral": 1, "bad": 1 - conf}
+    data = pd.read_csv(path_to_data)
+    sentences = [literal_eval(sentence) for sentence in data['merged_contexts']]
+    replies = [literal_eval(sentence) for sentence in data['reply']]
+    #y_labels= np.array([label_to_num[x] for x in data.label])
+    tags = np.zeros(len(sentences))
+    return list(zip(sentences, replies, tags))
+
+
 def load_regression_dataset(path_to_data, conf=0.999):
     label_to_num = {"good": 2, "neutral": 1, "bad": 1 - conf}
     data = pd.read_csv(path_to_data)
@@ -600,6 +620,39 @@ def pad_sequences(sequences, pad_tok, nlevels=1):
                 max_length_sentence)
 
     return sequence_padded, sequence_length
+
+
+
+
+def minibatches_w_replies(data, minibatch_size):
+    """
+    Args:
+        data: generator of (sentence, replies, tags) tuples
+        minibatch_size: (int)
+
+    Yields:
+        list of tuples
+
+    """
+    x_batch, replies_batch, y_batch = [], [], []
+    for (x, reply, y) in data:
+        if len(x_batch) == minibatch_size:
+            yield x_batch, replies_batch, y_batch
+            x_batch, replies_batch, y_batch = [], [], []
+
+        if type(x[0]) == tuple:
+            x = zip(*x)
+        
+        if type(reply[0]) == tuple:
+            reply = zip(*reply)
+        
+        x_batch += [x]
+        replies_batch += [reply]
+        y_batch += [y]
+
+    if len(x_batch) != 0:
+        yield x_batch, replies_batch, y_batch
+
 
 
 def minibatches(data, minibatch_size):
