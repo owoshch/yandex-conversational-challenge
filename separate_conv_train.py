@@ -9,19 +9,18 @@ from ast import literal_eval
 import tqdm
 from separate_conv_model import NERModel
 from model.conv_config import Config
-from model.data_utils import load_dataset, load_test_set, load_regression_dataset, \
-                                sort_xgb_predictions, save_submission
+from model.data_utils import load_dataset, load_test_set, load_pairwise_dataset, load_regression_dataset
 
 
 config = Config()
+
 model = NERModel(config)
 model.build()
 
-train = load_regression_dataset(model.config.path_to_train)
-test = load_regression_dataset(model.config.path_to_test)
-val = load_regression_dataset(model.config.path_to_val)
 
-model.train(train, test)
+train = load_pairwise_dataset(model.config.path_to_train)
+test = load_pairwise_dataset(model.config.path_to_test)
+val = load_pairwise_dataset(model.config.path_to_val)
 
 
 # Print evaluating on test set
