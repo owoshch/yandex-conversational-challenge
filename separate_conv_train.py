@@ -22,10 +22,11 @@ train = load_pairwise_dataset(model.config.path_to_train)
 test = load_pairwise_dataset(model.config.path_to_test)
 val = load_pairwise_dataset(model.config.path_to_val)
 
+model.train(train, test)
 
 # Print evaluating on test set
 
-model.restore_session(config.dir_model)
+#model.restore_session(config.dir_model)
 
 
 sub = load_test_set(model.config.path_to_preprocessed_test)
