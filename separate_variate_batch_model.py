@@ -352,7 +352,7 @@ class NERModel(BaseModel):
         pbar = tqdm.tqdm(total=len(data))
         
         
-        distances = compute_distances(dataframe)
+        distances = compute_lengths(dataframe)
         batch_size = distances[0]
         
         for i, (words, replies, labels) in enumerate(minibatches_w_replies(data, batch_size)):
@@ -428,7 +428,7 @@ class NERModel(BaseModel):
         pbar = tqdm.tqdm(total=len(test))
         
         test_dataframe = pd.read_csv(path_to_test)
-        test_distances = compute_distances(test_dataframe)
+        test_distances = compute_lengths(test_dataframe)
         batch_size = test_distances[0]
         
         predicted_labels = []
