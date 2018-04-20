@@ -172,18 +172,22 @@ class NERModel(BaseModel):
             pred = tf.matmul(output, W) + b
             logits = tf.reshape(pred, [-1, nsteps, self.config.hidden_dense_dim])
             
+
             
-            #print ('original logits shape', logits.shape)
+            logits = tf.reduce_mean(logits, axis=1)
+            
+            print ('logits shape', logits.shape)
             
             
-            logits_sq = tf.matmul(logits, logits, transpose_a=True)
+            #W1 = tf.get_variable("W1", dtype=tf.float32,
+            #        shape=[self.config.ntags, 1])
             
-            print ('logits shape', logits_sq.shape)
             
-            #logits = tf.reduce_mean(logits, axis=1)
+            #sc = tf.matmul(logits, W1)
             
-          
-        
+            #sc = tf.reshape(sc, (1, -1))[0]
+                        
+            #self.logits = sc
             
         with tf.variable_scope("bi-lstm-replies"):
             cell_fw_reply = tf.contrib.rnn.LSTMCell(self.config.hidden_size_lstm)
@@ -207,17 +211,15 @@ class NERModel(BaseModel):
             logits_reply = tf.reshape(pred_reply, [-1, nsteps, self.config.hidden_dense_dim])
             
             
-            logits_reply_sq = tf.matmul(logits_reply, logits_reply, transpose_a=True)
-        
+            logits_reply = tf.reduce_mean(logits_reply, axis=1)
             
             
-          
             
-            print ('logits reply shape', logits_reply_sq.shape)
-        
-        self.logits = tf.norm(logits_reply_sq-logits_sq, axis=[1, 2], ord='euclidean')
-        
-        print ('self.logits shape', self.logits.shape)
+            
+            
+            print ('logits reply shape', logits_reply.shape)
+
+        self.logits = tf.norm(logits_reply-logits, axis=1, ord='euclidean')
         
         
             
@@ -394,7 +396,7 @@ class NERModel(BaseModel):
             _, train_loss, summary = self.sess.run(
                     [self.train_op, self.loss, self.merged], feed_dict=fd)
             
-            print (i, batch_size)
+            #print (i, batch_size)
             batch_size = distances[i + 1]
 
             prog.update(i + 1, [("train loss", train_loss)])
