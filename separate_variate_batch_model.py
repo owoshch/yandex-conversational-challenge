@@ -354,12 +354,12 @@ class NERModel(BaseModel):
         
         distances = compute_lengths(dataframe)
         batch_size = distances[0]
-        
+        pbar.update(batch_size)
         for i, (words, replies, labels) in enumerate(minibatches_w_replies(data, batch_size)):
             labels_pred, sequence_lengths = self.predict_proba_batch(words, replies)
             final_predictions.extend(labels_pred)
-            pbar.update(batch_size)
             batch_size = distances[i + 1]
+            pbar.update(batch_size)
         pbar.close()
         return final_predictions
     
@@ -430,13 +430,13 @@ class NERModel(BaseModel):
         test_dataframe = pd.read_csv(path_to_test)
         test_distances = compute_lengths(test_dataframe)
         batch_size = test_distances[0]
-        
+        pbar.update(batch_size)
         predicted_labels = []
         for i, (words, replies, labels) in enumerate(minibatches_w_replies(test, batch_size)):
             labels_pred, sequence_lengths = self.predict_batch(words, replies)
             predicted_labels.extend(labels_pred)
-            pbar.update(batch_size)
             batch_size = test_distances[i + 1]
+            pbar.update(batch_size)
         pbar.close()  
         
         
