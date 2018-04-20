@@ -183,15 +183,16 @@ class NERModel(BaseModel):
             logits = tf.reshape(pred, [-1, nsteps, self.config.hidden_dense_dim])
             
             
-            logits = tf.reduce_mean(logits, axis=1)
+            #print ('original logits shape', logits.shape)
+            
+            
+            logits_sq = tf.matmul(logits, logits, transpose_a=True)
+            
+            print ('logits shape', logits_sq.shape)
+            
+            #logits = tf.reduce_mean(logits, axis=1)
             
           
-        with tf.variable_scope("context-dense"):
-            w_dense = tf.get_variable("W", dtype=tf.float32,
-                                      shape=[self.config.hidden_dense_dim])
-            logits = tf.multiply(logits, w_dense)
-            
-            print ('logits shape', logits.shape)
         
             
         with tf.variable_scope("bi-lstm-replies"):
@@ -216,20 +217,19 @@ class NERModel(BaseModel):
             logits_reply = tf.reshape(pred_reply, [-1, nsteps, self.config.hidden_dense_dim])
             
             
-            logits_reply = tf.reduce_mean(logits_reply, axis=1)
-           
-        with tf.variable_scope("reply-dense"):
-            w_dense = tf.get_variable("W", dtype=tf.float32,
-                                      shape=[self.config.hidden_dense_dim])
-            logits_reply = tf.multiply(logits_reply, w_dense)
+            logits_reply_sq = tf.matmul(logits_reply, logits_reply, transpose_a=True)
+        
+            
             
           
             
-            print ('logits reply shape', logits_reply.shape)
+            print ('logits reply shape', logits_reply_sq.shape)
         
-        self.logits = tf.matmul(logits, logits_reply, transpose_b=True)
+        self.logits = tf.norm(logits_reply_sq-logits_sq, axis=[1, 2], ord='euclidean')
         
-        #self.logits = tf.norm(logits_reply-logits, axis=1, ord='euclidean')
+        print ('self.logits shape', self.logits.shape)
+        
+        
             
     
     
