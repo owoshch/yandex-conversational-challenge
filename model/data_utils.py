@@ -10,6 +10,7 @@ from fastText import load_model
 import argparse
 import errno
 from scipy.spatial.distance import euclidean
+from sklearn.preprocessing import normalize
 
 # shared global variables to be imported from model also
 UNK = "$UNK$"
@@ -50,6 +51,7 @@ def load_pairwise_dataset(path_to_data, conf=0.999):
     replies = [literal_eval(sentence) for sentence in data['reply']]
     y_labels= np.array([label_to_num[x] for x in data.label])
     tags = y_labels * data.confidence
+    normalized_tags = normalize(tags)[0]
     return list(zip(sentences, replies, tags))
 
 
