@@ -11,7 +11,7 @@ import tqdm
 
 from model.general_utils import Progbar
 from model.base_model import BaseModel
-from model.separate_config import Config
+from model.config import Config
 from model.data_utils import minibatches, minibatches_w_replies, pad_sequences, \
         load_dataset, load_regression_dataset, one_hot_to_num, \
         get_mean_NDCG, softmax, sort_xgb_predictions, save_submission, load_pairwise_dataset, compute_lengths
@@ -440,6 +440,7 @@ class NERModel(BaseModel):
         pbar.close()  
         
         
+        print ('preds', predicted_labels[:5])
         
         sorted_preds = sort_xgb_predictions(test_dataframe, predicted_labels) 
         
@@ -447,7 +448,7 @@ class NERModel(BaseModel):
         test_NDCG = get_mean_NDCG(test_dataframe, sorted_preds)
         
         print ('test NDCG', test_NDCG)
-        
+        '''
         val_df = pd.read_csv(self.config.path_to_val)
         val = load_pairwise_dataset(self.config.path_to_val)
         val_preds = self.predict_proba(val, val_df)
@@ -455,7 +456,8 @@ class NERModel(BaseModel):
                                  
         print ('val NDCG', val_NDCG)
                                  
-        NDCG = np.mean((test_NDCG, val_NDCG))
-        
-        return {"NDCG": NDCG}
-    
+        #NDCG = np.mean((test_NDCG, val_NDCG))
+
+        NDCG = val_NDCG
+        '''
+        return {"NDCG": test_NDCG}

@@ -9,7 +9,7 @@ from ast import literal_eval
 import tqdm
 #from separate_NER_model import NERModel
 from separate_variate_batch_model import NERModel
-from model.separate_config import Config
+from model.config import Config
 from model.data_utils import load_pairwise_dataset, load_pairwise_testset, sort_xgb_predictions, save_submission 
 
 
@@ -22,9 +22,9 @@ print (config.dir_model)
 
 model.restore_session(config.dir_model)
 
-train = load_pairwise_dataset(model.config.path_to_preprocessed_train)
-train_preds = model.predict_proba(train)
-np.save("../data/regressor_nn_train_preds.npy", train_preds) 
+#train = load_pairwise_dataset(model.config.path_to_preprocessed_train)
+#train_preds = model.predict_proba(train)
+#np.save("../data/regressor_nn_train_preds.npy", train_preds) 
 
 
 

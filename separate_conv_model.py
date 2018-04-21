@@ -25,7 +25,7 @@ from model.base_model import BaseModel
 from model.separate_config import Config
 from model.data_utils import minibatches, minibatches_w_replies, pad_sequences, \
         load_dataset, load_regression_dataset, one_hot_to_num, \
-        get_mean_NDCG, softmax, sort_xgb_predictions, save_submission
+        get_mean_NDCG, softmax, sort_xgb_predictions, save_submission, compute_lengths, load_pairwise_dataset
 from sklearn.metrics import accuracy_score, f1_score
 from collections import Counter
 import tqdm
@@ -380,14 +380,20 @@ class NERModel(BaseModel):
             return labels_pred, sequence_lengths
 
 
-    def predict_proba(self, data):
+    def predict_proba(self, data, dataframe):
         # data is tuple like while train
         final_predictions = []
         pbar = tqdm.tqdm(total=len(data))
-        for words, replies, labels in minibatches_w_replies(data, self.config.batch_size):
+        
+        
+        distances = compute_lengths(dataframe)
+        batch_size = distances[0]
+        pbar.update(batch_size)
+        for i, (words, replies, labels) in enumerate(minibatches_w_replies(data, batch_size)):
             labels_pred, sequence_lengths = self.predict_proba_batch(words, replies)
             final_predictions.extend(labels_pred)
-            pbar.update(self.config.batch_size)
+            batch_size = distances[i + 1]
+            pbar.update(batch_size)
         pbar.close()
         return final_predictions
     
@@ -409,8 +415,13 @@ class NERModel(BaseModel):
         # progbar stuff for logging
         batch_size = self.config.batch_size
         nbatches = (len(train) + batch_size - 1) // batch_size
-        prog = Progbar(target=nbatches)
-
+        #prog = Progbar(target=nbatches)
+        
+        distances = compute_lengths(pd.read_csv(config.path_to_train))
+        batch_size = distances[0]
+        
+        prog = Progbar(target=len(distances))
+        
         # iterate over dataset
         for i, (words, replies, labels) in enumerate(minibatches_w_replies(train, batch_size)):
             fd, _ = self.get_feed_dict(words, replies, labels, self.config.lr,
@@ -418,6 +429,9 @@ class NERModel(BaseModel):
 
             _, train_loss, summary = self.sess.run(
                     [self.train_op, self.loss, self.merged], feed_dict=fd)
+            
+            #print (i, batch_size)
+            batch_size = distances[i + 1]
 
             prog.update(i + 1, [("train loss", train_loss)])
 
@@ -447,42 +461,34 @@ class NERModel(BaseModel):
         
         pbar = tqdm.tqdm(total=len(test))
         
+        test_dataframe = pd.read_csv(path_to_test)
+        test_distances = compute_lengths(test_dataframe)
+        batch_size = test_distances[0]
+        pbar.update(batch_size)
         predicted_labels = []
-        for words, replies, labels in minibatches_w_replies(test, self.config.batch_size):
+        for i, (words, replies, labels) in enumerate(minibatches_w_replies(test, batch_size)):
             labels_pred, sequence_lengths = self.predict_batch(words, replies)
             predicted_labels.extend(labels_pred)
-            pbar.update(self.config.batch_size)
+            batch_size = test_distances[i + 1]
+            pbar.update(batch_size)
         pbar.close()  
         
-        test_dataframe = pd.read_csv(path_to_test)
+        
         
         sorted_preds = sort_xgb_predictions(test_dataframe, predicted_labels) 
         
-        print ('sorted preds', sorted_preds[:20])
-        print ('type:', type(sorted_preds[0]))
+    
+        test_NDCG = get_mean_NDCG(test_dataframe, sorted_preds)
         
-        NDCG = get_mean_NDCG(test_dataframe, sorted_preds)
+        print ('test NDCG', test_NDCG)
+        
+        val_df = pd.read_csv(self.config.path_to_val)
+        val = load_pairwise_dataset(self.config.path_to_val)
+        val_preds = self.predict_proba(val, val_df)
+        val_NDCG = get_mean_NDCG(val_df, sort_xgb_predictions(val_df, val_preds))
+                                 
+        print ('val NDCG', val_NDCG)
+                                 
+        NDCG = np.mean((test_NDCG, val_NDCG))
+        
         return {"NDCG": NDCG}
-    
-
-        
-    
-    '''
-    def predict(self, words_raw):
-        """Returns list of tags
-
-        Args:
-            words_raw: list of words (string), just one sentence (no batch)
-
-        Returns:
-            preds: list of tags (string), one for each word in the sentence
-
-        """
-        words = [self.config.processing_word(w) for w in words_raw]
-        if type(words[0]) == tuple:
-            words = zip(*words)
-        pred_ids, _ = self.predict_batch([words])
-        preds = [self.idx_to_tag[idx] for idx in list(pred_ids[0])]
-
-        return preds
-    '''

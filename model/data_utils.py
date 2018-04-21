@@ -14,7 +14,8 @@ from sklearn.preprocessing import normalize
 
 # shared global variables to be imported from model also
 UNK = "$UNK$"
-NUM = "$NUM$"
+#NUM = "$NUM$"
+NUM = "семь"
 NONE = "O"
 
 BEGIN = "<s>"
@@ -35,6 +36,12 @@ trimm your word vectors.
         super(MyIOError, self).__init__(message)
 
 
+def normalize(v):
+    norm=np.linalg.norm(v, ord=1)
+    if norm==0:
+        norm=np.finfo(v.dtype).eps
+    return v/norm
+
 
 
 def load_dataset(path_to_data):
@@ -51,7 +58,7 @@ def load_pairwise_dataset(path_to_data, conf=0.999):
     replies = [literal_eval(sentence) for sentence in data['reply']]
     y_labels= np.array([label_to_num[x] for x in data.label])
     tags = y_labels * data.confidence
-    normalized_tags = normalize([tags])[0]
+    #normalized_tags = normalize([tags])[0]
     return list(zip(sentences, replies, tags))
 
 
@@ -240,11 +247,11 @@ def export_trimmed_glove_vectors(vocab, glove_filename, trimmed_filename, dim):
 
 
 
-def export_trimmed_fasttext_vectors(vocab, fasttext_bin_filename, trimmed_filename):
+def export_trimmed_fasttext_vectors(vocab, fasttext_bin_filename, trimmed_filename, dim=300):
     embeddings = np.zeros([len(vocab), dim])
     f = load_model(fasttext_bin_filename)
     for word in tqdm.tqdm(vocab):
-        embeddings[vocab[word]] = f.get_sentence_word(word)
+        embeddings[vocab[word]] = f.get_sentence_vector(word)
     np.savez_compressed(trimmed_filename, embeddings=embeddings)
 
 
@@ -299,7 +306,7 @@ def correct_sentence(string):
 
 def change_letter(new_word, letter_to_change, change):
     e_index = new_word.index(letter_to_change)
-    new_word = new_word[:e_index] + change + new_word[e_index + 1:]
+    new_word = new_word[:e_index] + change + new_word[e_index + len(letter_to_change):]
     return new_word
 
 
@@ -318,6 +325,15 @@ def unk_to_normal_form(dataset_vocab, vocab_fasttext, path_to_dict):
             
         elif new_word == '<CENSORED>':
             new_word = 'censored'
+
+        elif 't' in new_word:
+            new_word = change_letter(new_word, 't', 'т')
+
+        elif 'ƒ' in new_word:
+            new_word = change_letter(new_word, 'ƒ', 'ф')
+
+        elif 'ьl' in new_word:
+            new_word = change_letter(new_word, 'ьl', 'ы')
         
         else:
             new_word = correct_sentence(word)
@@ -783,3 +799,22 @@ def ids_to_sentences(dataframe, config, columns = ['context_2', 'context_1', 'co
     id2word = {value:key for key,value in config.vocab_words.items()}
     for column_name in tqdm.tqdm(columns):
         dataframe[column_name] = dataframe[column_name].apply(lambda line: indices_to_sentence(line, id2word))
+
+
+def save_public(path_to_file, config, public_predictions):
+    private = pd.read_csv(config.path_to_private_dataframe, error_bad_lines=False, sep = '[  . ? , !]?\t', 
+                   header=None)
+    private.columns = config.test_column_names
+    public_ids = np.load(config.public_indices)
+    submission_df = private[['context_id', 'reply_id']]
+    submission_df.loc[public_ids, 'reply_id'] = public_predictions
+    submission_df.to_csv(path_to_file, sep=' ', index=False, header=False)
+    return submission_df
+
+
+def load_preds(filename):
+    answers = []
+    with open(filename) as f:
+        for line in f:
+            answers.append(int(line.split()[1]))
+    return answers
