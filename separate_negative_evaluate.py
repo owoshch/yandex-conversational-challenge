@@ -8,9 +8,9 @@ import tensorflow as tf
 from ast import literal_eval
 import tqdm
 #from separate_NER_model import NERModel
-from separate_variate_batch_model import NERModel
-from model.config import Config
-from model.data_utils import load_pairwise_dataset, load_pairwise_testset, sort_xgb_predictions, save_submission 
+from separate_variate_batch_model_negative import NERModel
+from model.negative_config import Config
+from model.data_utils import load_dataset, load_test_set, load_pairwise_dataset, load_negative_pairwise_dataset
 
 
 
@@ -31,4 +31,5 @@ model.restore_session(config.dir_model)
 sub = load_pairwise_testset(model.config.path_to_final_preprocessed_test)
 sub_df = pd.read_csv(model.config.path_to_final_preprocessed_test)
 sub_preds = model.predict_proba(sub, sub_df)
-save_submission("../data/final_separate_3_epoch.txt", sub_df, sort_xgb_predictions(sub_df, sub_preds))
+#np.save("../data/regressor_nn_sub_preds.npy", sub_preds)
+save_submission("../data/final_negative_separate_3_epoch.txt", sub_df, sort_xgb_predictions(sub_df,  3 - np.array(sub_preds)))
