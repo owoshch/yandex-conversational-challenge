@@ -56,18 +56,22 @@ class Config():
                 if self.use_pretrained else None)
         
         
-    dir_output = "results/no_glove_last_word/"
+    dir_output = "results/final_regression/"
     dir_model  = dir_output + "model.weights/"
     path_log   = dir_output + "log.txt"
         
     #filename_words = "../data/vocab.txt"
-    filename_words = "./vocab.txt"
+    filename_words_final = "../data/final_vocab.txt"
+
+    #filename_words = "./vocab.txt"
+    filename_words = filename_words_final
 
     path_to_embedding_vectors = "../data/wiki.ru.vec" #fasttext embedding
     filename_glove = "../data/wiki.ru.vec"
     filename_bin_fasttext = "../data/wiki.ru.bin"
     #filename_trimmed = "../data/embedding_vectors.npy.npz"
-    filename_trimmed = "../data/fasttext_embedding_vectors.npy.npz"
+    #filename_trimmed = "../data/fasttext_embedding_vectors.npy.npz"
+    filename_trimmed = "../data/fasttext_embedding_vectors_final.npy.npz"
 
     # train and test imports
 
@@ -85,25 +89,59 @@ class Config():
     path_to_test_dataframe =  "../data/public.tsv"
     test_vocab = "../data/test_vocab.npy"
 
+
+    path_to_private_dataframe = "../data/final.tsv"
+    private_vocab = "../data/private_vocab.npy"
+
+    private_unk = "../data/private_unk_dict.npy"
+
     test_unk = "../data/test_unk_dict.npy"
 
-    unk_dict = "../data/unk_dict.npy"
+
+    final_unk_dict = "../data/final_unk_dict.npy"
+    #unk_dict = "../data/unk_dict.npy"
+    unk_dict = final_unk_dict
 
     dim_word = 300
 
-    train_indices = "../data/train_context_ids.npy"
-    test_indices = "../data/test_context_ids.npy"
-    val_indices = "../data/val_context_ids.npy"
+    #train_indices = "../data/train_context_ids.npy"
+    #test_indices = "../data/test_context_ids.npy"
+    #val_indices = "../data/val_context_ids.npy"
 
-    path_to_train = "./datasets/train_splitted.csv"
-    path_to_test = "./datasets/test_splitted.csv"
-    path_to_val = "./datasets/val_splitted.csv"
+    train_indices = "../data/train_context_ids_final.npy"
+    test_indices = "../data/test_context_ids_final.npy"
+
+    public_indices = "../data/public_context_ids.npy"
+    private_indices = "../data/private_context_ids.npy"
 
 
 
+    #path_to_train = "./datasets/train_splitted.csv"
+    #path_to_test = "./datasets/test_splitted.csv"
+    #path_to_val = "./datasets/val_splitted.csv"
 
-    path_to_preprocessed_train = "../data/train_preprocessed.csv"
-    path_to_preprocessed_test = "../data/test_preprocessed.csv"
+    path_to_not_preprocessed_train = "./datasets/train_words_dataframe.csv"
+    path_to_not_preprocessed_val = "./datasets/val_words_dataframe.csv"
+    path_to_not_preprocessed_test = "./datasets/test_words_dataframe.csv"
+
+    path_to_filtered_train = "./datasets/filtered_train.csv"
+    path_to_filtered_test = "./datasets/filtered_test.csv"
+
+    path_to_final_preprocessed_train = "../data/final_train_preprocessed.csv"
+    path_to_final_preprocessed_test = "../data/final_test_preprocessed.csv"
+
+    path_to_train = "./datasets/train_splitted_final.csv"
+    path_to_test = "./datasets/test_splitted_final.csv"
+
+
+
+    #path_to_preprocessed_train = "../data/train_preprocessed.csv"
+    #path_to_preprocessed_test = "../data/test_preprocessed.csv"
+
+    path_to_preprocessed_train = path_to_final_preprocessed_train
+    path_to_preprocessed_test = path_to_final_preprocessed_test
+
+
     path_to_submission = "../data/submission.txt"
     path_to_predicted_labels = "../data/predicted_labels.npy"
 
@@ -111,6 +149,8 @@ class Config():
     path_to_xgb_log = "../data/xgb_models/xgb_log.txt"
     path_to_xgb_submissions="../data/xgb_sumbissions/"
 
+    path_to_matrix_xgb_models = "../data/matrix_xgb_models/"
+    path_to_matrix_xgb_log = "../data/matrix_xgb_models/matrix_xgb_log.txt"
 
     mapping = {"good": [0, 0, 1], "neutral": [0, 1, 0], "bad": [1, 0, 0]}
     label_to_num = {"good": 2, "neutral": 1, "bad": 0}
@@ -120,7 +160,7 @@ class Config():
 
     # training
     train_embeddings = False
-    nepochs          = 1
+    nepochs          = 3
     dropout          = 0.5
     batch_size       = 20
     lr_method        = "adam"
@@ -132,6 +172,7 @@ class Config():
     # model hyperparameters
     hidden_size_char = 512 # lstm on chars
     hidden_size_lstm = 1024  # lstm on word embeddings
+    hidden_dense_dim = 300
 
     use_chars = False
     use_crf = False 
