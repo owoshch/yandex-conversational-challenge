@@ -31,4 +31,6 @@ model.restore_session(config.dir_model)
 sub = load_pairwise_testset(model.config.path_to_final_preprocessed_test)
 sub_df = pd.read_csv(model.config.path_to_final_preprocessed_test)
 sub_preds = model.predict_proba(sub, sub_df)
-save_submission("../data/final_separate_3_epoch.txt", sub_df, sort_xgb_predictions(sub_df, sub_preds))
+path_to_submission = "../data/final_separate_3_epoch.txt"
+print ('path to file', path_to_submission)
+save_submission(path_to_submission, sub_df, sort_xgb_predictions(sub_df, sub_preds))
