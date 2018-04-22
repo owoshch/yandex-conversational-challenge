@@ -440,8 +440,8 @@ class NERModel(BaseModel):
         pbar.close()  
         
         
-        print ('preds', predicted_labels[:5])
-        
+        print ('my preds', predicted_labels[:5])
+        print ('test preds', [x[2] for x in test[:5]])
         sorted_preds = sort_xgb_predictions(test_dataframe, predicted_labels) 
         
     
