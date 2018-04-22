@@ -61,6 +61,16 @@ def load_pairwise_dataset(path_to_data, conf=0.999):
     #normalized_tags = normalize([tags])[0]
     return list(zip(sentences, replies, tags))
 
+def load_negative_pairwise_dataset(path_to_data, conf=0.999):
+    label_to_num = {"bad": 3, "neutral": 1, "good": 1 - conf}
+    data = pd.read_csv(path_to_data)
+    sentences = [literal_eval(sentence) for sentence in data['merged_contexts']]
+    replies = [literal_eval(sentence) for sentence in data['reply']]
+    y_labels= np.array([label_to_num[x] for x in data.label])
+    tags = y_labels * data.confidence
+    #normalized_tags = normalize([tags])[0]
+    return list(zip(sentences, replies, tags))
+
 
 def load_pairwise_testset(path_to_data, conf=0.999):
     label_to_num = {"good": 2, "neutral": 1, "bad": 1 - conf}
@@ -774,6 +784,9 @@ def sort_xgb_predictions(dataframe, predictitons):
         #print (predicted_probas)
         total_predictions.extend(predicted_indices)
     return total_predictions
+
+
+
 
 
 def save_submission(path_to_submission, dataframe, predictions):
