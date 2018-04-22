@@ -191,7 +191,7 @@ class NERModel(BaseModel):
                     dtype=tf.float32, initializer=tf.zeros_initializer())
             
             
-            transposed_logits = tf.sigmoid(tf.tensordot(W_dense_context, transposed_logits, axes=1) \
+            transposed_logits = tf.sigmoid(tf.tensordot(transposed_logits, W_dense_context, axes=1) \
                                            + b_dense_context)
             
             
@@ -243,7 +243,7 @@ class NERModel(BaseModel):
                     dtype=tf.float32, initializer=tf.zeros_initializer())
             
             
-            transposed_logits_reply = tf.sigmoid(tf.tensordot(W_dense_reply, transposed_logits_reply, axes=1) \
+            transposed_logits_reply = tf.sigmoid(tf.tensordot(transposed_logits_reply, W_dense_reply, axes=1) \
                                                  + b_dense_reply)
             
             print ('transposed reply logits shape', transposed_logits_reply.shape)
@@ -253,6 +253,12 @@ class NERModel(BaseModel):
         
         
         self.logits = tf.norm(transposed_logits_reply - transposed_logits, axis=[1, 2], ord='euclidean')
+        
+
+        
+        
+        
+            
     
     
     def add_pred_op(self):
