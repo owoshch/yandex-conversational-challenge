@@ -23,6 +23,8 @@ train = load_pairwise_dataset(model.config.path_to_train)
 test = load_pairwise_dataset(model.config.path_to_test)
 #val = load_pairwise_dataset(model.config.path_to_val)
 
+print ('train target', [x[2] for x in train[0:20]])
+print ('test target', [x[2] for x in test[0:20]])
 
 model.train(train, test)
 
