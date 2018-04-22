@@ -18,6 +18,7 @@ config = Config()
 model = NERModel(config)
 model.build()
 
+model.restore_session(config.dir_model)
 
 train = load_pairwise_dataset(model.config.path_to_train)
 test = load_pairwise_dataset(model.config.path_to_test)
