@@ -585,7 +585,7 @@ def get_mean_NDCG(dataframe, predictions = None, conf=1):
             context_ndcg = 1.0
         scores = np.append(scores, context_ndcg)
     final_score = np.mean(scores) * 100000
-    return final_score, scores
+    return final_score
 
 
 
