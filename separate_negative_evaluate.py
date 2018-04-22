@@ -10,7 +10,7 @@ import tqdm
 #from separate_NER_model import NERModel
 from separate_variate_batch_model_negative import NERModel
 from model.negative_config import Config
-from model.data_utils import load_dataset, load_test_set, load_pairwise_dataset, load_negative_pairwise_dataset
+from model.data_utils import load_dataset, load_test_set, load_pairwise_dataset, load_pairwise_testset
 
 
 
