@@ -9,8 +9,10 @@ import itertools
 from fastText import load_model
 import argparse
 import errno
-from scipy.spatial.distance import euclidean
+from scipy.spatial.distance import euclidean, pdist, squareform
 from sklearn.preprocessing import normalize
+import random
+import copy
 
 # shared global variables to be imported from model also
 UNK = "$UNK$"
@@ -51,29 +53,31 @@ def load_dataset(path_to_data):
     return list(zip(sentences, tags))
 
 
-def load_pairwise_dataset(path_to_data, conf=0.999):
+def load_pairwise_dataset(path_to_data, conf=0.999, normalize=False):
     label_to_num = {"good": 3, "neutral": 1, "bad": 1 - conf}
     data = pd.read_csv(path_to_data)
     sentences = [literal_eval(sentence) for sentence in data['merged_contexts']]
     replies = [literal_eval(sentence) for sentence in data['reply']]
     y_labels= np.array([label_to_num[x] for x in data.label])
     tags = y_labels * data.confidence
-    #normalized_tags = normalize([tags])[0]
+    if normalize:
+        tags = normalize([tags])[0]
     return list(zip(sentences, replies, tags))
 
-def load_negative_pairwise_dataset(path_to_data, conf=0.999):
+def load_negative_pairwise_dataset(path_to_data, conf=0.999, normalize=False):
     label_to_num = {"bad": 3, "neutral": 1, "good": 1 - conf}
     data = pd.read_csv(path_to_data)
     sentences = [literal_eval(sentence) for sentence in data['merged_contexts']]
     replies = [literal_eval(sentence) for sentence in data['reply']]
     y_labels= np.array([label_to_num[x] for x in data.label])
     tags = y_labels * data.confidence
+    if normalize:
+        tags = normalize([tags])[0]
     #normalized_tags = normalize([tags])[0]
     return list(zip(sentences, replies, tags))
 
 
-def load_pairwise_testset(path_to_data, conf=0.999):
-    label_to_num = {"good": 2, "neutral": 1, "bad": 1 - conf}
+def load_pairwise_testset(path_to_data):
     data = pd.read_csv(path_to_data)
     sentences = [literal_eval(sentence) for sentence in data['merged_contexts']]
     replies = [literal_eval(sentence) for sentence in data['reply']]
@@ -825,3 +829,44 @@ def load_preds(filename):
         for line in f:
             answers.append(int(line.split()[1]))
     return answers
+
+
+def distcorr(Xval, Yval, pval=True, nruns=500):
+    """ Compute the distance correlation function, returning the p-value.
+    Based on Satra/distcorr.py (gist aa3d19a12b74e9ab7941)
+    >>> a = [1,2,3,4,5]
+    >>> b = np.array([1,2,9,4,4])
+    >>> distcorr(a, b)
+    (0.76267624241686671, 0.268)
+    """
+    X = np.atleast_1d(Xval)
+    Y = np.atleast_1d(Yval)
+    if np.prod(X.shape) == len(X):
+        X = X[:, None]
+    if np.prod(Y.shape) == len(Y):
+        Y = Y[:, None]
+    X = np.atleast_2d(X)
+    Y = np.atleast_2d(Y)
+    n = X.shape[0]
+    if Y.shape[0] != X.shape[0]:
+        raise ValueError('Number of samples must match')
+    a = squareform(pdist(X))
+    b = squareform(pdist(Y))
+    A = a - a.mean(axis=0)[None, :] - a.mean(axis=1)[:, None] + a.mean()
+    B = b - b.mean(axis=0)[None, :] - b.mean(axis=1)[:, None] + b.mean()
+
+    dcov2_xy = (A * B).sum()/float(n * n)
+    dcov2_xx = (A * A).sum()/float(n * n)
+    dcov2_yy = (B * B).sum()/float(n * n)
+    dcor = np.sqrt(dcov2_xy)/np.sqrt(np.sqrt(dcov2_xx) * np.sqrt(dcov2_yy))
+
+    if pval:
+        greater = 0
+        for i in range(nruns):
+            Y_r = copy.copy(Yval)
+            random.shuffle(Y_r)
+            if distcorr(Xval, Y_r, pval=False) > dcor:
+                greater += 1
+        return (dcor, greater/float(n))
+    else:
+        return dcor
