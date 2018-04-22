@@ -52,7 +52,7 @@ def load_dataset(path_to_data):
 
 
 def load_pairwise_dataset(path_to_data, conf=0.999):
-    label_to_num = {"good": 2, "neutral": 1, "bad": 1 - conf}
+    label_to_num = {"good": 3, "neutral": 1, "bad": 1 - conf}
     data = pd.read_csv(path_to_data)
     sentences = [literal_eval(sentence) for sentence in data['merged_contexts']]
     replies = [literal_eval(sentence) for sentence in data['reply']]
@@ -409,7 +409,7 @@ def dcg_at_k(r, k, method=0):
     return 0.
 
 
-def ndcg_at_k(r, correct_rankings, k=None, method=0):
+def ndcg_at_k(r, k, method=0):
     """Score is normalized discounted cumulative gain (ndcg)
     Relevance is positive real values.  Can use binary
     as the previous methods.
@@ -436,14 +436,10 @@ def ndcg_at_k(r, correct_rankings, k=None, method=0):
     Returns:
         Normalized discounted cumulative gain
     """
-    if k is None:
-        k = len(correct_rankings)
-    
-    dcg_max = dcg_at_k(correct_rankings, k, method)
+    dcg_max = dcg_at_k(sorted(r, reverse=True), k, method)
     if not dcg_max:
         return 0.
     return dcg_at_k(r, k, method) / dcg_max
-
 
 
 def get_predictions(weighted_labels):
@@ -557,7 +553,8 @@ def get_scores_and_ids(dataframe, context_id):
 
 
 
-def get_mean_NDCG(dataframe, predictions = None):
+def get_mean_NDCG(dataframe, predictions = None, conf=1):
+    label_to_num = {"good": 2, "neutral": 1, "bad": 0}
     if predictions is None:
         predictions = dataframe.predicted
         print ('setting predictions to predicted column in test')
@@ -565,23 +562,20 @@ def get_mean_NDCG(dataframe, predictions = None):
         print ('type preds', type(predictions[0]))
         predictions = np.array(predictions)
         dataframe['predicted'] = predictions
-    
     scores = np.array([])
-    
     for line_context_id in dataframe.context_id.unique():
-        _, predicted_scores, correct_scores = get_scores_and_ids(dataframe, line_context_id)
-        
-        if not all(v == 0 for v in correct_scores):
-            context_ndcg = ndcg_at_k(predicted_scores, correct_scores, len(correct_scores))
+        partition = dataframe.loc[dataframe['context_id'] == line_context_id]
+        partial_preds = np.take(predictions, partition.index, axis=0)
+        y_labels= np.array([label_to_num[x] for x in partition.label])
+        answers = [y_labels[x] for x in partial_preds]
+        if not all(v == 0 for v in answers):
+            context_ndcg = ndcg_at_k(answers, len(answers))
         else:
             # if all correct predictions are bad
             context_ndcg = 1.0
-            
         scores = np.append(scores, context_ndcg)
-    
     final_score = np.mean(scores) * 100000
-    
-    return final_score
+    return final_score, scores
 
 
 
