@@ -56,7 +56,7 @@ class Config():
                 if self.use_pretrained else None)
         
         
-    dir_output = "results/final_regression/"
+    dir_output = "results/normalized_final_regression/"
     dir_model  = dir_output + "model.weights/"
     path_log   = dir_output + "log.txt"
         
@@ -124,16 +124,25 @@ class Config():
     path_to_not_preprocessed_val = "./datasets/val_words_dataframe.csv"
     path_to_not_preprocessed_test = "./datasets/test_words_dataframe.csv"
 
-    path_to_filtered_train = "./datasets/filtered_train.csv"
-    path_to_filtered_test = "./datasets/filtered_test.csv"
+    #words
+    path_to_filtered_train = "./datasets/train_final_filtered.csv"
+    path_to_filtered_test = "./datasets/test_final_filtered.csv"
 
+    #ids
     path_to_final_preprocessed_train = "../data/final_train_preprocessed.csv"
     path_to_final_preprocessed_test = "../data/final_test_preprocessed.csv"
 
-    path_to_train = "./datasets/train_splitted_final.csv"
-    path_to_test = "./datasets/test_splitted_final.csv"
+    #ids
+    no_stopwords_preprocessed_train = "../data/no_stopwords_final_train_preprocessed.csv"
+    no_stopwords_preprocessed_test = "../data/no_stopwords_final_test_preprocessed.csv"
 
+    #ids
+    #path_to_train = "./datasets/train_splitted_final.csv"
+    #path_to_test = "./datasets/test_splitted_final.csv"
 
+    #
+    path_to_splitted_train = './datasets/splitted_train_final_filtered.csv'
+    path_to_splitted_test = "./datasets/splitted_test_final_filtered.csv"
 
     #path_to_preprocessed_train = "../data/train_preprocessed.csv"
     #path_to_preprocessed_test = "../data/test_preprocessed.csv"
@@ -141,6 +150,11 @@ class Config():
     path_to_preprocessed_train = path_to_final_preprocessed_train
     path_to_preprocessed_test = path_to_final_preprocessed_test
 
+    path_to_no_stopwords_train = "./datasets/no_stopwords_train.csv"
+    path_to_no_stopwords_test = "./datasets/no_stopwords_test.csv"
+
+    path_to_train = path_to_no_stopwords_train
+    path_to_test = path_to_no_stopwords_test
 
     path_to_submission = "../data/submission.txt"
     path_to_predicted_labels = "../data/predicted_labels.npy"
@@ -160,14 +174,14 @@ class Config():
 
     # training
     train_embeddings = False
-    nepochs          = 3
+    nepochs          = 100
     dropout          = 0.5
     batch_size       = 20
     lr_method        = "adam"
     lr               = 0.001
     lr_decay         = 0.9
     clip             = -1 # if negative, no clipping
-    nepoch_no_imprv  = 3
+    nepoch_no_imprv  = 50
 
     # model hyperparameters
     hidden_size_char = 512 # lstm on chars
