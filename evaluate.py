@@ -1,23 +1,20 @@
-import time
-import sys
-import logging
-import numpy as np
 import pandas as pd
-import os
-import tensorflow as tf
-from ast import literal_eval
-import tqdm
-from ner_model import NERModel
+from separate_ranking_model import RankingModel
 from model.config import Config
-from model.data_utils import load_dataset
+from model.data_utils import load_pairwise_testset, rank_predictions, save_submission
+
 
 config = Config()
-model = NERModel(config)
-model.build()
 
+model = RankingModel(config)
+model.build()
 model.restore_session(config.dir_model)
 
+sub = load_pairwise_testset(model.config.path_to_preprocessed_private)
+sub_df = pd.read_csv(model.config.path_to_preprocessed_private)
 
-test = load_dataset(model.config.path_to_test)
+print ('Path to submission:', model.config.path_to_submission)
 
-model.run_evaluate(test)
+sub_preds = model.predict_proba(sub, sub_df)
+
+save_submission(model.config.path_to_submission, sub_df, rank_predictions(sub_df, sub_preds))

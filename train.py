@@ -1,3 +1,4 @@
+"""
 import time
 import sys
 import logging
@@ -7,19 +8,21 @@ import os
 import tensorflow as tf
 from ast import literal_eval
 import tqdm
-from ner_model import NERModel
+"""
+from separate_ranking_model import RankingModel
 from model.config import Config
-from model.data_utils import load_dataset
+from model.data_utils import load_pairwise_dataset
 
 
 config = Config()
-model = NERModel(config)
+
+model = RankingModel(config)
 model.build()
 
-#test = load_dataset(model.config.path_to_test)
-val = load_dataset(model.config.path_to_val)
-train = load_dataset(model.config.path_to_train)
+# uncomment the line below if you want to continue training using the stored weights
+# model.restore_session(model.config.dir_model)
 
-model.train(train, val)
+train = load_pairwise_dataset(model.config.path_to_train)
+test = load_pairwise_dataset(model.config.path_to_test)
 
-
+model.train(train, test)

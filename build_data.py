@@ -3,46 +3,68 @@ import numpy as np
 import requests
 import tqdm
 import pymorphy2
-from model.config import Config
-from model.data_utils import UNK, NUM, BEGIN, END, \
-    get_glove_vocab, write_vocab, load_vocab, \
-    export_trimmed_glove_vectors, get_processing_word, \
-    get_vocab, get_unique_column_words, correct_sentence, \
-    change_letter, unk_to_normal_form
+import os.path
+from model.config_final import Config
+from model.data_utils_used import UNK, NUM, get_vocab, get_embedding_vocab, unk_to_normal_form, \
+                                    export_trimmed_fasttext_vectors, write_vocab, load_vocab
 
 
 config = Config(load=False)
 
 train = pd.read_csv(config.path_to_train_dataframe, error_bad_lines=False, sep = '[  . ? , !]?\t', 
-                   header=None)
+                   header=None, engine='python')
 train.columns = config.train_column_names
 train_vocab = get_vocab(train, config.train_vocab)
 
-public = pd.read_csv(config.path_to_test_dataframe, error_bad_lines=False, sep = '[  . ? , !]?\t', 
-                   header=None)
-public.columns = config.test_column_names
-test_vocab = get_vocab(public, config.test_vocab)
+print ('Train was loaded')
 
-vocab_fasttext = get_glove_vocab(config.path_to_embedding_vectors)
-
-
-train_unk_to_normal = unk_to_normal_form(train_vocab, vocab_fasttext, config.train_unk)
-test_unk_to_normal = unk_to_normal_form(test_vocab, vocab_fasttext, config.test_unk)
-unk_dict = {**train_unk_to_normal, **test_unk_to_normal}
-
-np.save(config.unk_dict, unk_dict)
-
-vocab = (train_vocab | test_vocab  | set(unk_dict.keys())) & vocab_fasttext
-vocab.add(UNK)
-vocab.add(NUM)
-vocab.add(BEGIN)
-vocab.add(END)
+private = pd.read_csv(config.path_to_private_dataframe, error_bad_lines=False, sep = '[  . ? , !]?\t', 
+                   header=None, engine='python')
+private.columns = config.test_column_names
+private_vocab = get_vocab(private, config.private_vocab)
 
 
-write_vocab(vocab, config.filename_words)
+print ('Test was loaded')
+
+vocab_fasttext = get_embedding_vocab(config.filename_fasttext)
+
+print ('Fasttext vocab was loaded')
+
+
+if not os.path.exists(config.train_unk):
+    print ('Start creating dictionary of unknown words from train:')
+    train_unk_to_normal = unk_to_normal_form(train_vocab, vocab_fasttext, config.train_unk)
+    np.save(config.train_unk, train_unk_to_normal)
+else:
+    train_unk_to_normal = np.load(config.train_unk).item()
+
+
+if not os.path.exists(config.private_unk):
+    print ('Start creating dictionary of unknown words from test:')
+    test_unk_to_normal = unk_to_normal_form(private_vocab, vocab_fasttext, config.private_unk)
+    np.save(config.private_unk, test_unk_to_normal)
+else:
+    test_unk_to_normal = np.load(config.private_unk).item()
+
+
+final_unk_dict = {**train_unk_to_normal, **test_unk_to_normal}
+
+
+np.save(config.unk_dict, final_unk_dict)
+
+print ('Finak dictionary for unkknown words was created and stored at', config.unk_dict)
+
+final_vocab = (train_vocab | private_vocab  | set(final_unk_dict.values())) & vocab_fasttext
+
+final_vocab.add(UNK)
+final_vocab.add(NUM)
+
+write_vocab(final_vocab, config.filename_words)
 
 vocab = load_vocab(config.filename_words)
-export_trimmed_glove_vectors(vocab, config.filename_glove,
+
+export_trimmed_fasttext_vectors(vocab, config.filename_bin_fasttext,
                                 config.filename_trimmed, config.dim_word)
+
 
 
