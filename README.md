@@ -122,6 +122,9 @@ make data
 
 9) Optional. Download pretrained weights.
 
+```
+make weights
+```
 
 
 
