@@ -200,15 +200,15 @@ reli принимает три возможных значения - 2, 1 и 0 -
 Скор участников отображаемый в контесте - это среднее NDCG для всех context_id тестовых данных, умноженное на 100 000.
 
 
-Links: \ 
+Links:
 [1] A Survey on Dialogue Systems: Recent Advances and New Frontiers. KDD 2017 http://www.kdd.org/exploration_files/19-2-Article3.pdf \
 [2] OpenSubtitles http://opus.nlpl.eu/download.php?f=OpenSubtitles2016/en-ru.txt.zip \
 [3] https://github.com/faneshion/MatchZoo \
 [4] https://github.com/julianser/hed-dlg-truncated \
 [5] Two are Better than One: An Ensemble of Retrieval- and Generation-Based Dialog Systems, 2016 https://arxiv.org/pdf/1610.07149.pdf \
-[6] https://alice.yandex.ru \
+[6] https://alice.yandex.ru
 
-Other useful links: \ 
-https://habr.com/company/yandex/blog/349172/ \ 
-https://www.youtube.com/watch?v=m4yxsBMBgtM \ 
+Other useful links:  
+https://habr.com/company/yandex/blog/349172/  
+https://www.youtube.com/watch?v=m4yxsBMBgtM  
 
