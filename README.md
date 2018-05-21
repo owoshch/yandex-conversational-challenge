@@ -1,8 +1,8 @@
 # General Conversation Challenge
 
 
-This repo implements retrieval-based dialogue system in Tensorflow
-This is a solution for ML track of Yandex Algorithm 2018 (https://contest.yandex.com/algorithm2018/)
+This repo implements retrieval-based dialogue system in Tensorflow.  
+This is a solution for ML track of Yandex Algorithm 2018 (https://contest.yandex.com/algorithm2018/). 
 The goal of the challenge was to build a system that can rank answers for a dialogue system based on labeled Hollywood movies scripts.
 
 ## Task
@@ -12,10 +12,8 @@ Given a dialog (from 1 to 3 utterances) and up to 5 possible answers, rank answe
 
 ## Data preprocessing
 
-Data in the assignment is more or less clean. However, it does contain some spelling mistakes and encoding bugs (for example, 'ьl' instead of 'ы')
-Because of that, I do some prerocessing during transferring sentence words to indices. 
-I make words lowercase as well for simplicity.
-If context contains more than one utterances, I concatenate them to one long paragraph.
+Data in the assignment is more or less clean. However, it does contain some spelling mistakes and encoding bugs (for example, 'ьl' instead of 'ы'). Because of that, I do some prerocessing during transferring sentence words to indices. 
+I make words lowercase as well for simplicity. If context contains more than one utterances, I concatenate them to one long paragraph.
 
 
 # Model
@@ -201,13 +199,14 @@ reli принимает три возможных значения - 2, 1 и 0 -
 
 
 Links:
-[1] A Survey on Dialogue Systems: Recent Advances and New Frontiers. KDD 2017 http://www.kdd.org/exploration_files/19-2-Article3.pdf 
-[2] OpenSubtitles http://opus.nlpl.eu/download.php?f=OpenSubtitles2016/en-ru.txt.zip 
-[3] https://github.com/faneshion/MatchZoo 
-[4] https://github.com/julianser/hed-dlg-truncated 
-[5] Two are Better than One: An Ensemble of Retrieval- and Generation-Based Dialog Systems, 2016 https://arxiv.org/pdf/1610.07149.pdf [6] https://alice.yandex.ru
+[1] A Survey on Dialogue Systems: Recent Advances and New Frontiers. KDD 2017 http://www.kdd.org/exploration_files/19-2-Article3.pdf \
+[2] OpenSubtitles http://opus.nlpl.eu/download.php?f=OpenSubtitles2016/en-ru.txt.zip \
+[3] https://github.com/faneshion/MatchZoo \
+[4] https://github.com/julianser/hed-dlg-truncated \
+[5] Two are Better than One: An Ensemble of Retrieval- and Generation-Based Dialog Systems, 2016 https://arxiv.org/pdf/1610.07149.pdf \
+[6] https://alice.yandex.ru
 
-Other useful links:
-https://habr.com/company/yandex/blog/349172/
-https://www.youtube.com/watch?v=m4yxsBMBgtM
+Other useful links:  
+https://habr.com/company/yandex/blog/349172/  
+https://www.youtube.com/watch?v=m4yxsBMBgtM  
 
