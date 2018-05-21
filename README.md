@@ -85,7 +85,7 @@ cd yandex-dialog-challenge
 pip install -r requirements.txt
 ```
 
-4) Install FastText and download pretrained word vectors:
+4) Install FastText:
 
 ```
 make fasttext
@@ -99,7 +99,7 @@ make corpus
 ```
 
 
-6) Download contest dataset:
+6) Download the contest dataset:
 
 ```
 make dataset
