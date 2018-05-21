@@ -69,7 +69,7 @@ For such vectors we can compute Euclidean, cosine or whatever distance and try t
 1) Clone the repo:
 
 ```
-git clone https://github.com/owoshch/yandex-dialog-challenge.git
+git clone https://github.com/owoshch/yandex-conversational-challenge.git
 ```
 2) Create the virtual environment:
 Note: I use Anaconda for managing environments. However, you can use your favorite approach.
