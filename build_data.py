@@ -4,8 +4,8 @@ import requests
 import tqdm
 import pymorphy2
 import os.path
-from model.config_final import Config
-from model.data_utils_used import UNK, NUM, get_vocab, get_embedding_vocab, unk_to_normal_form, \
+from model.config import Config
+from model.data_utils import UNK, NUM, get_vocab, get_embedding_vocab, unk_to_normal_form, \
                                     export_trimmed_fasttext_vectors, write_vocab, load_vocab
 
 
