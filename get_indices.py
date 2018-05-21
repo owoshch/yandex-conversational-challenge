@@ -4,8 +4,8 @@ import requests
 import tqdm
 import pymorphy2
 from ast import literal_eval
-from model.config_final import Config
-from model.data_utils_used import load_vocab, sentence_to_indices, \
+from model.config import Config
+from model.data_utils import load_vocab, sentence_to_indices, \
                     merge_context_and_reply
 
 config = Config(load=False)
